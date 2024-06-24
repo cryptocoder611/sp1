@@ -4825,6 +4825,8 @@ version = "0.1.0"
 dependencies = [
  "arrayref",
  "backtrace",
+ "bincode",
+ "criterion",
  "ff 0.13.0",
  "hashbrown 0.14.5",
  "itertools 0.13.0",

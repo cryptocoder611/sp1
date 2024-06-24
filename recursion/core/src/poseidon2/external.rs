@@ -517,6 +517,10 @@ mod tests {
         let duration = start.elapsed().as_secs_f64();
         println!("proof duration = {:?}", duration);
 
+        // Serialize the proof to bytes
+        let proof_bytes = bincode::serialize(&proof).unwrap();
+        println!("Proof size: {} KB", (proof_bytes.len() as f64) / 1024.0);
+
         let mut challenger: p3_challenger::DuplexChallenger<
             BabyBear,
             Poseidon2<BabyBear, Poseidon2ExternalMatrixGeneral, DiffusionMatrixBabyBear, 16, 7>,
@@ -536,23 +540,50 @@ mod tests {
         let rng = &mut rand::thread_rng();
 
         let test_inputs: Vec<[BabyBear; 16]> = (0..16)
-            .map(|_| core::array::from_fn(|_| BabyBear::rand(rng)))
-            .collect_vec();
+                .map(|_| core::array::from_fn(|_| BabyBear::rand(rng)))
+                .collect_vec();
 
-        let gt: Poseidon2<
-            BabyBear,
-            Poseidon2ExternalMatrixGeneral,
-            DiffusionMatrixBabyBear,
-            16,
-            7,
-        > = inner_perm();
+            let gt: Poseidon2<
+                BabyBear,
+                Poseidon2ExternalMatrixGeneral,
+                DiffusionMatrixBabyBear,
+                16,
+                7,
+            > = inner_perm();
 
-        let expected_outputs = test_inputs
-            .iter()
-            .map(|input| gt.permute(*input))
-            .collect::<Vec<_>>();
+            let expected_outputs = test_inputs
+                .iter()
+                .map(|input| gt.permute(*input))
+                .collect::<Vec<_>>();
 
         prove_babybear(test_inputs, expected_outputs)
+    }
+
+    #[test]
+    fn prove_multi_babybear_success() {
+        let rng = &mut rand::thread_rng();
+        for log_size in 10..15 {
+            let size = 1 << log_size;
+            println!("size: {:?}", size);
+            let test_inputs: Vec<[BabyBear; 16]> = (0..size)
+                .map(|_| core::array::from_fn(|_| BabyBear::rand(rng)))
+                .collect_vec();
+
+            let gt: Poseidon2<
+                BabyBear,
+                Poseidon2ExternalMatrixGeneral,
+                DiffusionMatrixBabyBear,
+                16,
+                7,
+            > = inner_perm();
+
+            let expected_outputs = test_inputs
+                .iter()
+                .map(|input| gt.permute(*input))
+                .collect::<Vec<_>>();
+
+            prove_babybear(test_inputs, expected_outputs);
+        }
     }
 
     #[test]
